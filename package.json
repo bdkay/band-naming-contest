@@ -16,6 +16,9 @@
   "bugs": {
     "url": "https://github.com/jscomplete/learn-fullstack-javascript/issues"
   },
+  "jshintConfig": {
+    "esversion": 6
+  },
   "homepage": "https://github.com/jscomplete/learn-fullstack-javascript#readme",
   "dependencies": {
     "express": "^4.14.1",
