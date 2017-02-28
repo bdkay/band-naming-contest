@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/jscomplete/learn-fullstack-javascript#readme",
   "dependencies": {
+    "ejs": "^2.5.6",
     "express": "^4.14.1",
     "mongodb": "^2.2.24",
     "react": "^15.4.2",
