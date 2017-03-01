@@ -59,12 +59,30 @@
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
-	var App = function App() {
+	var Header = function Header(_ref) {
+	  var message = _ref.message;
+	
 	  return _react2.default.createElement(
 	    'h2',
-	    { className: 'text-center' },
-	    'Hello React Components! ',
-	    Math.random()
+	    { className: 'Header text-center' },
+	    message
+	  );
+	};
+	
+	Header.propTypes = {
+	  message: _react2.default.PropTypes.string
+	};
+	
+	var App = function App() {
+	  return _react2.default.createElement(
+	    'div',
+	    { className: 'App' },
+	    _react2.default.createElement(Header, { message: 'Node-ing Contests' }),
+	    _react2.default.createElement(
+	      'div',
+	      null,
+	      '...'
+	    )
 	  );
 	};
 	

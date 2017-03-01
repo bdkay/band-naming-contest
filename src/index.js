@@ -1,13 +1,28 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
+const Header = ({ message }) => {
+  return (
+    <h2 className="Header text-center">
+      {message}
+    </h2>
+  );
+};
+
+Header.propTypes = {
+  message: React.PropTypes.string
+};
+
 const App = () => {
   return (
-    <h2 className="text-center">
-      Hello React Components! {Math.random()}
-    </h2>
-  )
-}
+    <div className="App">
+      <Header message="Node-ing Contests" />
+      <div>
+        ...
+      </div>
+    </div>
+  );
+};
 
 ReactDOM.render(
   <App />,
