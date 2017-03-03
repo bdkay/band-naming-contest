@@ -13,13 +13,18 @@ server.use(sassMiddleware({
 
 server.set('view engine', 'ejs');
 
-import './ServerRender';
+import serverRender from './serverRender';
 
 //pre-render React components on server
 server.get('/', (req, res) => {
-  res.render('index', {
-    content: '...'
-  });
+  serverRender()
+    .then(( { initialMarkup, initialData } ) => {
+      res.render('index', {
+        initialMarkup,
+        initialData
+      });
+    })
+    .catch(console.error);
 });
 
 server.use('/api', apiRouter);
