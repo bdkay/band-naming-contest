@@ -1,9 +1,9 @@
 //depeneds on React and a Header Component
 
 import React from 'react';
+import axios from 'axios';
 import Header from './Header';
 import ContestPreview from './ContestPreview';
-import data from '../testData';
 
 // extends React.compontent, gives it state, makes it class-based
 // react.CreateClass also does this, but extend is newer
@@ -17,9 +17,18 @@ class App extends React.Component {
 
   // custom behavior for the life cycle of the component can be itilized with these hooks
   componentDidMount() {
-    this.setState({
-      contests: data.contests
-    });
+    //ajax...
+    axios.get('/api/contests')
+    .then(resp => {
+      this.setState({
+        contests: resp.data.contests
+      });
+    })
+    .catch(console.error);
+
+    // this.setState({
+    //   contests: data.contests
+    // });
   }
   // ^^ used for AJAX fetching, timers, listeners
 
