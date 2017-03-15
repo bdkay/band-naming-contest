@@ -2,11 +2,15 @@
 
 import React from 'react';
 import Header from './Header';
-import ContestPreview from './ContestPreview';
+import ContestList from './ContestList';
+import Contest from './Contest';
 
 // extends React.compontent, gives it state, makes it class-based
 // react.CreateClass also does this, but extend is newer
 // const App = () => { return();}; is STATELESS, constant
+
+const pushState = (obj, url) =>
+  window.history.pushState(obj, '', url);
 
 class App extends React.Component {
   state = {
@@ -21,23 +25,41 @@ class App extends React.Component {
   // ^^ used for AJAX fetching, timers, listeners
 
 
-  // componentWillUnmount(){
-  //   console.log('will unmount');
-  //   debugger;
-  // };
-  // ^^ used for CLEANING AJAX fetching, timers, listeners so they don't leak out
-  // of the scope of the component
+  componentWillUnmount(){
+    // ^^ used for CLEANING AJAX fetching, timers, listeners so they don't leak out
+    // of the scope of the component
+  }
 
-  render(){
+  fetchContest = (contestId) => {
+    pushState(
+      { currentContestId: contestId },
+      `/contest/${contestId}`
+    );
+    // lookup the contest, put things on the state related to the contest I just clicked
+    // this.state.contests[contestId]
+    this.setState({
+      pageHeader: this.state.contests[contestId].contestName,
+      currentContestId: contestId
+    });
+  };
+
+  currentContest(){
+    return this.state.contests[this.state.currentContestId];
+  }
+  currentContent() {
+    if (this.state.currentContestId) {
+      return <Contest {...this.currentContest()} />;
+    }
+
+    return <ContestList
+      onContestClick={this.fetchContest}
+      contests={this.state.contests} />;
+  }
+  render() {
     return (
       <div className="App">
         <Header message={this.state.pageHeader} />
-        <div>
-          {this.state.contests.map(contest =>
-            // each map call must have a unique key to indentify the child element inside that map
-            <ContestPreview key={contest.id} {...contest} />
-          )}
-        </div>
+        {this.currentContent()}
       </div>
     );
   }
