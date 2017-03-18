@@ -4,6 +4,7 @@ import React from 'react';
 import Header from './Header';
 import ContestList from './ContestList';
 import Contest from './Contest';
+import * as api from '../api';
 
 // extends React.compontent, gives it state, makes it class-based
 // react.CreateClass also does this, but extend is newer
@@ -37,10 +38,12 @@ class App extends React.Component {
     );
     // lookup the contest, put things on the state related to the contest I just clicked
     // this.state.contests[contestId]
-    this.setState({
-      pageHeader: this.state.contests[contestId].contestName,
-      currentContestId: contestId
-    });
+    api.fetchConest(contestId).then(contest => {
+      this.setState({
+        pageHeader: contest.contestName,
+        currentContestId: contest.id
+      });
+    })
   };
 
   currentContest(){
