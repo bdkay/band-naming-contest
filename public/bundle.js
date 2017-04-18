@@ -22170,12 +22170,18 @@
 	
 	    return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_ref = App.__proto__ || Object.getPrototypeOf(App)).call.apply(_ref, [this].concat(args))), _this), _this.state = _this.props.initialData, _this.fetchContest = function (contestId) {
 	      pushState({ currentContestId: contestId }, '/contest/' + contestId);
-	      // lookup the contest, put things on the state related to the contest I just clicked
-	      // this.state.contests[contestId]
 	      api.fetchContest(contestId).then(function (contest) {
 	        _this.setState({
-	          currentContestId: contest.id,
-	          contests: _extends({}, _this.state.contests, _defineProperty({}, contest.id, contest))
+	          currentContestId: contest._id,
+	          contests: _extends({}, _this.state.contests, _defineProperty({}, contest._id, contest))
+	        });
+	      });
+	    }, _this.fetchContestList = function () {
+	      pushState({ currentContestId: null }, '/');
+	      api.fetchContestList().then(function (contests) {
+	        _this.setState({
+	          currentContestId: null,
+	          contests: contests
 	        });
 	      });
 	    }, _temp), _possibleConstructorReturn(_this, _ret);
@@ -22198,6 +22204,7 @@
 	  }, {
 	    key: 'currentContest',
 	
+	
 	    // Current Contest
 	    value: function currentContest() {
 	      return this.state.contests[this.state.currentContestId];
@@ -22217,7 +22224,9 @@
 	    key: 'currentContent',
 	    value: function currentContent() {
 	      if (this.state.currentContestId) {
-	        return _react2.default.createElement(_Contest2.default, this.currentContest());
+	        return _react2.default.createElement(_Contest2.default, _extends({
+	          contestListClick: this.fetchContestList
+	        }, this.currentContest()));
 	      }
 	
 	      return _react2.default.createElement(_ContestList2.default, {
@@ -22323,8 +22332,7 @@
 	};
 	
 	ContestList.propTypes = {
-	  contests: _react2.default.PropTypes.object,
-	  onContestClick: _react2.default.PropTypes.func.isRequired
+	  contests: _react2.default.PropTypes.object
 	};
 	
 	exports.default = ContestList;
@@ -22450,7 +22458,17 @@
 	      return _react2.default.createElement(
 	        "div",
 	        { className: "Contest" },
-	        this.props.description
+	        _react2.default.createElement(
+	          "div",
+	          { className: "contest-description" },
+	          this.props.description
+	        ),
+	        _react2.default.createElement(
+	          "div",
+	          { className: "home-link link",
+	            onClick: this.props.contestListClick },
+	          "Contest List"
+	        )
 	      );
 	    }
 	  }]);
@@ -22459,7 +22477,8 @@
 	}(_react.Component);
 	
 	Contest.propTypes = {
-	  description: _react.PropTypes.string.isRequired
+	  description: _react.PropTypes.string.isRequired,
+	  contestListClick: _react.PropTypes.func.isRequired
 	};
 	
 	exports.default = Contest;

@@ -18,7 +18,7 @@ class App extends React.Component {
   static propTypes = {
     initialData: React.PropTypes.object.isRequired
   }
-  
+
   // custom behavior for the life cycle of the component can be itilized with these hooks
   componentDidMount() {
 
@@ -35,18 +35,29 @@ class App extends React.Component {
       { currentContestId: contestId },
       `/contest/${contestId}`
     );
-    // lookup the contest, put things on the state related to the contest I just clicked
-    // this.state.contests[contestId]
     api.fetchContest(contestId).then(contest => {
       this.setState({
-        currentContestId: contest.id,
+        currentContestId: contest._id,
         contests: {
           ...this.state.contests,
-          [contest.id]: contest
+          [contest._id]: contest
         }
       });
     });
   };
+  fetchContestList = () => {
+    pushState(
+      { currentContestId: null },
+      '/'
+    );
+    api.fetchContestList().then(contests => {
+      this.setState({
+        currentContestId: null,
+        contests
+      });
+    });
+  };
+
 // Current Contest
   currentContest() {
     return this.state.contests[this.state.currentContestId];
@@ -61,7 +72,9 @@ class App extends React.Component {
 // Current Content
   currentContent() {
     if (this.state.currentContestId) {
-      return <Contest {...this.currentContest()} />;
+      return <Contest
+              contestListClick={this.fetchContestList}
+              {...this.currentContest()} />;
     }
 
     return <ContestList
