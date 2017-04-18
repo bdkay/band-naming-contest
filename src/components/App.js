@@ -14,17 +14,17 @@ const pushState = (obj, url) =>
   window.history.pushState(obj, '', url);
 
 class App extends React.Component {
-  state = {
-    pageHeader: 'Naming Contests',
-    contests: this.props.initialContests
+  static propTypes = {
+    initialData: React.PropTypes.object.isRequired
   };
+
+  state = this.props.initialData;
 
   // custom behavior for the life cycle of the component can be itilized with these hooks
   componentDidMount() {
 
   }
   // ^^ used for AJAX fetching, timers, listeners
-
 
   componentWillUnmount(){
     // ^^ used for CLEANING AJAX fetching, timers, listeners so they don't leak out
@@ -38,17 +38,28 @@ class App extends React.Component {
     );
     // lookup the contest, put things on the state related to the contest I just clicked
     // this.state.contests[contestId]
-    api.fetchConest(contestId).then(contest => {
+    api.fetchContest(contestId).then(contest => {
       this.setState({
-        pageHeader: contest.contestName,
-        currentContestId: contest.id
+        currentContestId: contest.id,
+        contests: {
+          ...this.state.contests,
+          [contest.id]: contest
+        }
       });
-    })
+    });
   };
-
-  currentContest(){
+// Current Contest
+  currentContest() {
     return this.state.contests[this.state.currentContestId];
   }
+  pageHeader(){
+    if (this.state.currentContestId){
+      return this.currentContest().contestName;
+    } else {
+      return 'Naming Contests';
+    }
+  }
+// Current Content
   currentContent() {
     if (this.state.currentContestId) {
       return <Contest {...this.currentContest()} />;
@@ -58,10 +69,11 @@ class App extends React.Component {
       onContestClick={this.fetchContest}
       contests={this.state.contests} />;
   }
+
   render() {
     return (
       <div className="App">
-        <Header message={this.state.pageHeader} />
+        <Header message={this.pageHeader()} />
         {this.currentContent()}
       </div>
     );

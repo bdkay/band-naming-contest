@@ -63,7 +63,7 @@
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
-	_reactDom2.default.render(_react2.default.createElement(_App2.default, { initialContests: window.initialData.contests }), document.getElementById('root'));
+	_reactDom2.default.render(_react2.default.createElement(_App2.default, { initialData: window.initialData }), document.getElementById('root'));
 	
 	// ### AJAX, eliminating it reduces API call...
 	// axios.get('/api/contests')
@@ -22110,6 +22110,8 @@
 	  value: true
 	});
 	
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+	
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 	
 	var _react = __webpack_require__(/*! react */ 1);
@@ -22135,6 +22137,8 @@
 	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 	
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 	
@@ -22164,17 +22168,14 @@
 	      args[_key] = arguments[_key];
 	    }
 	
-	    return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_ref = App.__proto__ || Object.getPrototypeOf(App)).call.apply(_ref, [this].concat(args))), _this), _this.state = {
-	      pageHeader: 'Naming Contests',
-	      contests: _this.props.initialContests
-	    }, _this.fetchContest = function (contestId) {
+	    return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_ref = App.__proto__ || Object.getPrototypeOf(App)).call.apply(_ref, [this].concat(args))), _this), _this.state = _this.props.initialData, _this.fetchContest = function (contestId) {
 	      pushState({ currentContestId: contestId }, '/contest/' + contestId);
 	      // lookup the contest, put things on the state related to the contest I just clicked
 	      // this.state.contests[contestId]
-	      api.fetchConest(contestId).then(function (contest) {
+	      api.fetchContest(contestId).then(function (contest) {
 	        _this.setState({
-	          pageHeader: contest.contestName,
-	          currentContestId: contest.id
+	          currentContestId: contest.id,
+	          contests: _extends({}, _this.state.contests, _defineProperty({}, contest.id, contest))
 	        });
 	      });
 	    }, _temp), _possibleConstructorReturn(_this, _ret);
@@ -22188,7 +22189,6 @@
 	    value: function componentDidMount() {}
 	    // ^^ used for AJAX fetching, timers, listeners
 	
-	
 	  }, {
 	    key: 'componentWillUnmount',
 	    value: function componentWillUnmount() {
@@ -22197,9 +22197,22 @@
 	    }
 	  }, {
 	    key: 'currentContest',
+	
+	    // Current Contest
 	    value: function currentContest() {
 	      return this.state.contests[this.state.currentContestId];
 	    }
+	  }, {
+	    key: 'pageHeader',
+	    value: function pageHeader() {
+	      if (this.state.currentContestId) {
+	        return this.currentContest().contestName;
+	      } else {
+	        return 'Naming Contests';
+	      }
+	    }
+	    // Current Content
+	
 	  }, {
 	    key: 'currentContent',
 	    value: function currentContent() {
@@ -22217,7 +22230,7 @@
 	      return _react2.default.createElement(
 	        'div',
 	        { className: 'App' },
-	        _react2.default.createElement(_Header2.default, { message: this.state.pageHeader }),
+	        _react2.default.createElement(_Header2.default, { message: this.pageHeader() }),
 	        this.currentContent()
 	      );
 	    }
@@ -22226,6 +22239,9 @@
 	  return App;
 	}(_react2.default.Component);
 	
+	App.propTypes = {
+	  initialData: _react2.default.PropTypes.object.isRequired
+	};
 	exports.default = App;
 
 /***/ },
@@ -22434,7 +22450,7 @@
 	      return _react2.default.createElement(
 	        "div",
 	        { className: "Contest" },
-	        this.props.id
+	        this.props.description
 	      );
 	    }
 	  }]);
@@ -22443,7 +22459,7 @@
 	}(_react.Component);
 	
 	Contest.propTypes = {
-	  id: _react.PropTypes.number.isRequired
+	  description: _react.PropTypes.string.isRequired
 	};
 	
 	exports.default = Contest;

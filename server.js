@@ -2,6 +2,7 @@ import config from './config';
 import apiRouter from './api';
 import sassMiddleware from 'node-sass-middleware';
 import path from 'path';
+import serverRender from './serverRender';
 
 import express from 'express';
 const server = express();
@@ -13,11 +14,10 @@ server.use(sassMiddleware({
 
 server.set('view engine', 'ejs');
 
-import serverRender from './serverRender';
-
 //pre-render React components on server
-server.get('/', (req, res) => {
-  serverRender()
+server.get(['/', '/contest/:contestId'], (req, res) => {
+  // console.log(req.params.contestId);
+  serverRender(req.params.contestId)
     .then(( { initialMarkup, initialData } ) => {
       res.render('index', {
         initialMarkup,
