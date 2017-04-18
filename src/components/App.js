@@ -14,12 +14,11 @@ const pushState = (obj, url) =>
   window.history.pushState(obj, '', url);
 
 class App extends React.Component {
+  state = this.props.initialData;
   static propTypes = {
     initialData: React.PropTypes.object.isRequired
-  };
-
-  state = this.props.initialData;
-
+  }
+  
   // custom behavior for the life cycle of the component can be itilized with these hooks
   componentDidMount() {
 
