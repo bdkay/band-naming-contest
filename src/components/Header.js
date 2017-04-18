@@ -1,5 +1,3 @@
-//only depends on React
-
 import React from 'react';
 
 const Header = ({ message }) => {

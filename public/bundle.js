@@ -64,31 +64,6 @@
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
 	_reactDom2.default.render(_react2.default.createElement(_App2.default, { initialData: window.initialData }), document.getElementById('root'));
-	
-	// ### AJAX, eliminating it reduces API call...
-	// axios.get('/api/contests')
-	// .then(resp => {
-	//   // this.setState({
-	//   //   contests: resp.data.contests
-	//   // });
-	//   ReactDOM.render(
-	//     <App initialContests={resp.data.contests} />,
-	//     document.getElementById('root')
-	//   );
-	//   // this.setState({
-	//   //   contests: data.contests
-	//   // });
-	// });
-	//});
-	
-	// setTimeout(() => {
-	//   ReactDOM.render(
-	//     <h2>...</h2>,
-	//     document.getElementById('root')
-	//   );
-	// }, 4000);
-	//dis a component, all it does is render a top level Component to the DOM
-	//depeneds on App Component
 
 /***/ },
 /* 1 */
@@ -22144,14 +22119,14 @@
 	
 	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 	
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; } //depeneds on React and a Header Component
-	
-	// extends React.compontent, gives it state, makes it class-based
-	// react.CreateClass also does this, but extend is newer
-	// const App = () => { return();}; is STATELESS, constant
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 	
 	var pushState = function pushState(obj, url) {
 	  return window.history.pushState(obj, '', url);
+	};
+	
+	var onPopState = function onPopState(handler) {
+	  window.onpopstate = handler;
 	};
 	
 	var App = function (_React$Component) {
@@ -22170,35 +22145,64 @@
 	
 	    return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_ref = App.__proto__ || Object.getPrototypeOf(App)).call.apply(_ref, [this].concat(args))), _this), _this.state = _this.props.initialData, _this.fetchContest = function (contestId) {
 	      pushState({ currentContestId: contestId }, '/contest/' + contestId);
-	      // lookup the contest, put things on the state related to the contest I just clicked
-	      // this.state.contests[contestId]
 	      api.fetchContest(contestId).then(function (contest) {
 	        _this.setState({
-	          currentContestId: contest.id,
-	          contests: _extends({}, _this.state.contests, _defineProperty({}, contest.id, contest))
+	          currentContestId: contest._id,
+	          contests: _extends({}, _this.state.contests, _defineProperty({}, contest._id, contest))
 	        });
 	      });
+	    }, _this.fetchContestList = function () {
+	      pushState({ currentContestId: null }, '/');
+	      api.fetchContestList().then(function (contests) {
+	        _this.setState({
+	          currentContestId: null,
+	          contests: contests
+	        });
+	      });
+	    }, _this.fetchNames = function (nameIds) {
+	      if (nameIds.length === 0) {
+	        return;
+	      }
+	      api.fetchNames(nameIds).then(function (names) {
+	        _this.setState({
+	          names: names
+	        });
+	      });
+	    }, _this.lookupName = function (nameId) {
+	      if (!_this.state.names || !_this.state.names[nameId]) {
+	        return {
+	          name: '...'
+	        };
+	      }
+	      return _this.state.names[nameId];
+	    }, _this.addName = function (newName, contestId) {
+	      api.addName(newName, contestId).then(function (resp) {
+	        return _this.setState({
+	          contests: _extends({}, _this.state.contests, _defineProperty({}, resp.updatedContest._id, resp.updatedContest)),
+	          names: _extends({}, _this.state.names, _defineProperty({}, resp.newName._id, resp.newName))
+	        });
+	      }).catch(console.error);
 	    }, _temp), _possibleConstructorReturn(_this, _ret);
 	  }
 	
 	  _createClass(App, [{
 	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      var _this2 = this;
 	
-	
-	    // custom behavior for the life cycle of the component can be itilized with these hooks
-	    value: function componentDidMount() {}
-	    // ^^ used for AJAX fetching, timers, listeners
-	
+	      onPopState(function (event) {
+	        _this2.setState({
+	          currentContestId: (event.state || {}).currentContestId
+	        });
+	      });
+	    }
 	  }, {
 	    key: 'componentWillUnmount',
 	    value: function componentWillUnmount() {
-	      // ^^ used for CLEANING AJAX fetching, timers, listeners so they don't leak out
-	      // of the scope of the component
+	      onPopState(null);
 	    }
 	  }, {
 	    key: 'currentContest',
-	
-	    // Current Contest
 	    value: function currentContest() {
 	      return this.state.contests[this.state.currentContestId];
 	    }
@@ -22207,17 +22211,20 @@
 	    value: function pageHeader() {
 	      if (this.state.currentContestId) {
 	        return this.currentContest().contestName;
-	      } else {
-	        return 'Naming Contests';
 	      }
-	    }
-	    // Current Content
 	
+	      return 'Naming Contests';
+	    }
 	  }, {
 	    key: 'currentContent',
 	    value: function currentContent() {
 	      if (this.state.currentContestId) {
-	        return _react2.default.createElement(_Contest2.default, this.currentContest());
+	        return _react2.default.createElement(_Contest2.default, _extends({
+	          contestListClick: this.fetchContestList,
+	          fetchNames: this.fetchNames,
+	          lookupName: this.lookupName,
+	          addName: this.addName
+	        }, this.currentContest()));
 	      }
 	
 	      return _react2.default.createElement(_ContestList2.default, {
@@ -22271,7 +22278,7 @@
 	    { className: "Header text-center" },
 	    message
 	  );
-	}; //only depends on React
+	};
 	
 	Header.propTypes = {
 	  message: _react2.default.PropTypes.string
@@ -22311,13 +22318,10 @@
 	    'div',
 	    { className: 'ContestList' },
 	    Object.keys(contests).map(function (contestId) {
-	      return (
-	        // each map call must have a unique key to indentify the child element inside that map
-	        _react2.default.createElement(_ContestPreview2.default, _extends({
-	          key: contestId,
-	          onClick: onContestClick
-	        }, contests[contestId]))
-	      );
+	      return _react2.default.createElement(_ContestPreview2.default, _extends({
+	        key: contestId,
+	        onClick: onContestClick
+	      }, contests[contestId]));
 	    })
 	  );
 	};
@@ -22371,7 +22375,7 @@
 	    }
 	
 	    return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_ref = ContestPreview.__proto__ || Object.getPrototypeOf(ContestPreview)).call.apply(_ref, [this].concat(args))), _this), _this.handleClick = function () {
-	      _this.props.onClick(_this.props.id);
+	      _this.props.onClick(_this.props._id);
 	    }, _temp), _possibleConstructorReturn(_this, _ret);
 	  }
 	
@@ -22388,7 +22392,7 @@
 	        ),
 	        _react2.default.createElement(
 	          "div",
-	          { className: "link contest-name" },
+	          { className: "contest-name" },
 	          this.props.contestName
 	        )
 	      );
@@ -22399,7 +22403,7 @@
 	}(_react.Component);
 	
 	ContestPreview.propTypes = {
-	  id: _react2.default.PropTypes.number.isRequired,
+	  _id: _react2.default.PropTypes.string.isRequired,
 	  categoryName: _react2.default.PropTypes.string.isRequired,
 	  contestName: _react2.default.PropTypes.string.isRequired,
 	  onClick: _react2.default.PropTypes.func.isRequired
@@ -22414,7 +22418,7 @@
   \***********************************/
 /***/ function(module, exports, __webpack_require__) {
 
-	"use strict";
+	'use strict';
 	
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
@@ -22432,25 +22436,136 @@
 	
 	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 	
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; } //handle events
-	
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 	
 	var Contest = function (_Component) {
 	  _inherits(Contest, _Component);
 	
 	  function Contest() {
+	    var _ref;
+	
+	    var _temp, _this, _ret;
+	
 	    _classCallCheck(this, Contest);
 	
-	    return _possibleConstructorReturn(this, (Contest.__proto__ || Object.getPrototypeOf(Contest)).apply(this, arguments));
+	    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+	      args[_key] = arguments[_key];
+	    }
+	
+	    return _ret = (_temp = (_this = _possibleConstructorReturn(this, (_ref = Contest.__proto__ || Object.getPrototypeOf(Contest)).call.apply(_ref, [this].concat(args))), _this), _this.handleSubmit = function (event) {
+	      event.preventDefault();
+	      _this.props.addName(_this.refs.newNameInput.value, _this.props._id);
+	      _this.refs.newNameInput.value = '';
+	    }, _temp), _possibleConstructorReturn(_this, _ret);
 	  }
 	
 	  _createClass(Contest, [{
-	    key: "render",
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      this.props.fetchNames(this.props.nameIds);
+	    }
+	  }, {
+	    key: 'render',
 	    value: function render() {
+	      var _this2 = this;
+	
 	      return _react2.default.createElement(
-	        "div",
-	        { className: "Contest" },
-	        this.props.description
+	        'div',
+	        { className: 'Contest' },
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'panel panel-default' },
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'panel-heading' },
+	            _react2.default.createElement(
+	              'h3',
+	              { className: 'panel-title' },
+	              'Contest Description'
+	            )
+	          ),
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'panel-body' },
+	            _react2.default.createElement(
+	              'div',
+	              { className: 'contest-description' },
+	              this.props.description
+	            )
+	          )
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'panel panel-default' },
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'panel-heading' },
+	            _react2.default.createElement(
+	              'h3',
+	              { className: 'panel-title' },
+	              'Proposed Names'
+	            )
+	          ),
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'panel-body' },
+	            _react2.default.createElement(
+	              'ul',
+	              { className: 'list-group' },
+	              this.props.nameIds.map(function (nameId) {
+	                return _react2.default.createElement(
+	                  'li',
+	                  { key: nameId, className: 'list-group-item' },
+	                  _this2.props.lookupName(nameId).name
+	                );
+	              })
+	            )
+	          )
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'panel panel-info' },
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'panel-heading' },
+	            _react2.default.createElement(
+	              'h3',
+	              { className: 'panel-title' },
+	              'Propose a New Name'
+	            )
+	          ),
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'panel-body' },
+	            _react2.default.createElement(
+	              'form',
+	              { onSubmit: this.handleSubmit },
+	              _react2.default.createElement(
+	                'div',
+	                { className: 'input-group' },
+	                _react2.default.createElement('input', { type: 'text',
+	                  placeholder: 'New Name Here...',
+	                  ref: 'newNameInput',
+	                  className: 'form-control' }),
+	                _react2.default.createElement(
+	                  'span',
+	                  { className: 'input-group-btn' },
+	                  _react2.default.createElement(
+	                    'button',
+	                    { type: 'submit', className: 'btn btn-info' },
+	                    'Sumbit'
+	                  )
+	                )
+	              )
+	            )
+	          )
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'home-link link',
+	            onClick: this.props.contestListClick },
+	          'Contest List'
+	        )
 	      );
 	    }
 	  }]);
@@ -22459,7 +22574,13 @@
 	}(_react.Component);
 	
 	Contest.propTypes = {
-	  description: _react.PropTypes.string.isRequired
+	  _id: _react.PropTypes.string.isRequired,
+	  description: _react.PropTypes.string.isRequired,
+	  contestListClick: _react.PropTypes.func.isRequired,
+	  fetchNames: _react.PropTypes.func.isRequired,
+	  nameIds: _react.PropTypes.array.isRequired,
+	  lookupName: _react.PropTypes.func.isRequired,
+	  addName: _react.PropTypes.func.isRequired
 	};
 	
 	exports.default = Contest;
@@ -22476,7 +22597,7 @@
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-	exports.fetchContestList = exports.fetchContest = undefined;
+	exports.addName = exports.fetchNames = exports.fetchContestList = exports.fetchContest = undefined;
 	
 	var _axios = __webpack_require__(/*! axios */ 184);
 	
@@ -22493,6 +22614,18 @@
 	var fetchContestList = exports.fetchContestList = function fetchContestList() {
 	  return _axios2.default.get('/api/contests').then(function (resp) {
 	    return resp.data.contests;
+	  });
+	};
+	
+	var fetchNames = exports.fetchNames = function fetchNames(nameIds) {
+	  return _axios2.default.get('/api/names/' + nameIds.join(',')).then(function (resp) {
+	    return resp.data.names;
+	  });
+	};
+	
+	var addName = exports.addName = function addName(newName, contestId) {
+	  return _axios2.default.post('/api/names', { newName: newName, contestId: contestId }).then(function (resp) {
+	    return resp.data;
 	  });
 	};
 

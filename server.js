@@ -3,9 +3,11 @@ import apiRouter from './api';
 import sassMiddleware from 'node-sass-middleware';
 import path from 'path';
 import serverRender from './serverRender';
-
 import express from 'express';
+import bodyParser from 'body-parser';
+
 const server = express();
+server.use(bodyParser.json());
 
 server.use(sassMiddleware({
   src: path.join(__dirname, 'sass'),
@@ -14,17 +16,18 @@ server.use(sassMiddleware({
 
 server.set('view engine', 'ejs');
 
-//pre-render React components on server
 server.get(['/', '/contest/:contestId'], (req, res) => {
-  // console.log(req.params.contestId);
   serverRender(req.params.contestId)
-    .then(( { initialMarkup, initialData } ) => {
+    .then(({ initialMarkup, initialData }) => {
       res.render('index', {
         initialMarkup,
         initialData
       });
     })
-    .catch(console.error);
+    .catch(error => {
+      console.error(error);
+      res.status(404).send('Bad Request');
+    });
 });
 
 server.use('/api', apiRouter);

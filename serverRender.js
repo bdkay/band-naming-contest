@@ -1,4 +1,3 @@
-// fetch data from the api
 import React from 'react';
 import ReactDOMServer from 'react-dom/server';
 
@@ -7,18 +6,19 @@ import App from './src/components/App';
 import config from './config';
 import axios from 'axios';
 
-const getApiUrl = (contestId) => {
+const getApiUrl = contestId => {
   if (contestId) {
     return `${config.serverUrl}/api/contests/${contestId}`;
-  } return `${config.serverUrl}/api/contests`;
+  }
+  return `${config.serverUrl}/api/contests`;
 };
 
 const getInitialData = (contestId, apiData) => {
-  if (contestId){
+  if (contestId) {
     return {
-      currentContestId: apiData.id,
+      currentContestId: apiData._id,
       contests: {
-        [apiData.id]: apiData
+        [apiData._id]: apiData
       }
     };
   }

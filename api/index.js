@@ -1,25 +1,84 @@
 import express from 'express';
-import data from '../src/testData';
+import { MongoClient, ObjectID } from 'mongodb';
+import assert from 'assert';
+import config from '../config';
 
-const router = express.Router();
-const contests = data.contests.reduce((obj, contest) => {
-  obj[contest.id] = contest;
-  return obj;
-}, {});
+let mdb;
+MongoClient.connect(config.mongodbUri, (err, db) => {
+  assert.equal(null, err);
 
-// PRE MONGO DB ROUTES
-
-router.get('/contests', (req, res) => {
-  res.send({
-    contests: contests
-  });
+  mdb = db;
 });
 
-router.get('/contests/:contestId', (req, res) => {
-  let contest = contests[req.params.contestId];
-  contest.description = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut sed ante malesuada, commodo elit sodales, rhoncus tortor. Fusce non elementum magna. Sed sollicitudin vitae dui vitae luctus. In pharetra, erat convallis fermentum consequat, leo neque vulputate dolor, vitae tincidunt quam sapien dignissim ipsum. Suspendisse aliquet scelerisque nunc ut accumsan. Donec id laoreet arcu. Cras id justo neque. Cras faucibus, lacus at tincidunt blandit, lorem enim hendrerit nisl, rutrum scelerisque enim purus a urna. Pellentesque consectetur turpis a semper accumsan. Donec consequat ullamcorper diam eu venenatis. Aliquam accumsan orci elementum, cursus elit ac, viverra mauris. In vel velit eget sem laoreet sagittis. Nam aliquam dapibus enim, in volutpat lorem facilisis ac. Etiam a leo eu diam accumsan venenatis. Nam tincidunt arcu ac metus auctor ultricies. Pellentesque placerat diam vitae nisi eleifend efficitur.';
+const router = express.Router();
 
-  res.send(contest);
+router.get('/contests', (req, res) => {
+  let contests = {};
+  mdb.collection('contests').find({})
+     .project({
+       categoryName: 1,
+       contestName: 1
+     })
+     .each((err, contest) => {
+       assert.equal(null, err);
+
+       if (!contest) { // no more contests
+         res.send({ contests });
+         return;
+       }
+
+       contests[contest._id] = contest;
+     });
+});
+
+router.get('/names/:nameIds', (req, res) => {
+  const nameIds = req.params.nameIds.split(',').map(ObjectID);
+  let names = {};
+  mdb.collection('names').find({ _id: { $in: nameIds }})
+     .each((err, name) => {
+       assert.equal(null, err);
+
+       if (!name) { // no more names
+         res.send({ names });
+         return;
+       }
+
+       names[name._id] = name;
+     });
+});
+
+
+router.get('/contests/:contestId', (req, res) => {
+  mdb.collection('contests')
+     .findOne({ _id: ObjectID(req.params.contestId) })
+     .then(contest => res.send(contest))
+     .catch(error => {
+       console.error(error);
+       res.status(404).send('Bad Request');
+     });
+});
+
+router.post('/names', (req, res) => {
+  const contestId = ObjectID(req.body.contestId);
+  const name = req.body.newName;
+  // validation ...
+  mdb.collection('names').insertOne({ name }).then(result =>
+    mdb.collection('contests').findAndModify(
+      { _id: contestId },
+      [],
+      { $push: { nameIds: result.insertedId } },
+      { new: true }
+    ).then(doc =>
+      res.send({
+        updatedContest: doc.value,
+        newName: { _id: result.insertedId, name }
+      })
+    )
+  )
+  .catch(error => {
+    console.error(error);
+    res.status(404).send('Bad Request');
+  });
 });
 
 export default router;

@@ -1,74 +1,115 @@
-//depeneds on React and a Header Component
-
 import React from 'react';
 import Header from './Header';
 import ContestList from './ContestList';
 import Contest from './Contest';
 import * as api from '../api';
 
-// extends React.compontent, gives it state, makes it class-based
-// react.CreateClass also does this, but extend is newer
-// const App = () => { return();}; is STATELESS, constant
-
 const pushState = (obj, url) =>
   window.history.pushState(obj, '', url);
 
+const onPopState = handler => {
+  window.onpopstate = handler;
+};
+
 class App extends React.Component {
-  state = this.props.initialData;
   static propTypes = {
     initialData: React.PropTypes.object.isRequired
-  }
-  
-  // custom behavior for the life cycle of the component can be itilized with these hooks
+  };
+  state = this.props.initialData;
   componentDidMount() {
-
+    onPopState((event) => {
+      this.setState({
+        currentContestId: (event.state || {}).currentContestId
+      });
+    });
   }
-  // ^^ used for AJAX fetching, timers, listeners
-
-  componentWillUnmount(){
-    // ^^ used for CLEANING AJAX fetching, timers, listeners so they don't leak out
-    // of the scope of the component
+  componentWillUnmount() {
+    onPopState(null);
   }
-
   fetchContest = (contestId) => {
     pushState(
       { currentContestId: contestId },
       `/contest/${contestId}`
     );
-    // lookup the contest, put things on the state related to the contest I just clicked
-    // this.state.contests[contestId]
     api.fetchContest(contestId).then(contest => {
       this.setState({
-        currentContestId: contest.id,
+        currentContestId: contest._id,
         contests: {
           ...this.state.contests,
-          [contest.id]: contest
+          [contest._id]: contest
         }
       });
     });
   };
-// Current Contest
+  fetchContestList = () => {
+    pushState(
+      { currentContestId: null },
+      '/'
+    );
+    api.fetchContestList().then(contests => {
+      this.setState({
+        currentContestId: null,
+        contests
+      });
+    });
+  };
+  fetchNames = (nameIds) => {
+    if (nameIds.length === 0) {
+      return;
+    }
+    api.fetchNames(nameIds).then(names => {
+      this.setState({
+        names
+      });
+    });
+  };
   currentContest() {
     return this.state.contests[this.state.currentContestId];
   }
-  pageHeader(){
-    if (this.state.currentContestId){
+  pageHeader() {
+    if (this.state.currentContestId) {
       return this.currentContest().contestName;
-    } else {
-      return 'Naming Contests';
     }
+
+    return 'Naming Contests';
   }
-// Current Content
+  lookupName = (nameId) => {
+    if (!this.state.names || !this.state.names[nameId]) {
+      return {
+        name: '...'
+      };
+    }
+    return this.state.names[nameId];
+  };
+  addName = (newName, contestId) => {
+    api.addName(newName, contestId).then(resp =>
+      this.setState({
+        contests: {
+          ...this.state.contests,
+          [resp.updatedContest._id]: resp.updatedContest
+        },
+        names: {
+          ...this.state.names,
+          [resp.newName._id]: resp.newName
+        }
+      })
+    )
+    .catch(console.error);
+  };
   currentContent() {
     if (this.state.currentContestId) {
-      return <Contest {...this.currentContest()} />;
+      return <Contest
+               contestListClick={this.fetchContestList}
+               fetchNames={this.fetchNames}
+               lookupName={this.lookupName}
+               addName={this.addName}
+               {...this.currentContest()} />;
     }
 
     return <ContestList
-      onContestClick={this.fetchContest}
-      contests={this.state.contests} />;
+            onContestClick={this.fetchContest}
+            contests={this.state.contests} />;
   }
-
   render() {
     return (
       <div className="App">

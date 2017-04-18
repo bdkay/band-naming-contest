@@ -4,7 +4,6 @@ import ContestPreview from './ContestPreview';
 const ContestList = ({ contests, onContestClick }) => (
   <div className="ContestList">
     {Object.keys(contests).map(contestId =>
-      // each map call must have a unique key to indentify the child element inside that map
       <ContestPreview
         key={contestId}
         onClick={onContestClick}
@@ -15,7 +14,7 @@ const ContestList = ({ contests, onContestClick }) => (
 
 ContestList.propTypes = {
   contests: React.PropTypes.object,
-  onContestClick: React.PropTypes.func.isRequired
+  onContestClick: React.PropTypes.func.isRequired,
 };
 
 export default ContestList;
